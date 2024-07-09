@@ -1,9 +1,16 @@
 from random import randint
 from time import sleep
 import os
+from colorama import init as colorama_init
+from colorama import Fore
+from colorama import Style
+
+colorama_init()
 
 GAME_STATE = 0
 IN_ROUND = True
+WIN_RATIO = 0
+ROUND_STAKE = 1
 PLAYER_CARDS = []
 DEALER_CARDS = []
 
@@ -47,6 +54,13 @@ DECK_S = {
 }
 
 
+def colored_card(card_pair):
+    if card_pair[1] == 1 or card_pair[1] == 2:
+        return f"{Fore.WHITE}{DECK_N[card_pair[0]]}{DECK_S[card_pair[1]]}{Style.RESET_ALL}"
+    else:
+        return f"{Fore.RED}{DECK_N[card_pair[0]]}{DECK_S[card_pair[1]]}{Style.RESET_ALL}"
+
+
 def new_cards():
     return [[randint(1, 13), randint(1, 4)], [randint(1, 13), randint(1, 4)]]
 
@@ -58,7 +72,7 @@ def new_card():
 def print_cards(cards):
     print(f"", end="   ")
     for card in cards:
-        print(f"{DECK_N[card[0]]}{DECK_S[card[1]]}", end="   ")
+        print(f"{colored_card(card)}", end="   ")
 
 
 def render_player_cards():
@@ -95,6 +109,7 @@ def get_cards_value(cards):
 # GAME LOOP
 while True:
     # ROUND LOOP
+    ROUND_STAKE = 1
     PLAYER_CARDS += new_cards()
     DEALER_CARDS += new_card()
 
@@ -103,20 +118,25 @@ while True:
         print()
 
         render_dealer_cards()
-        print("\n")
+        print(f"\n                        WIN RATIO:    {WIN_RATIO}")
         render_player_cards()
 
         if get_cards_value(PLAYER_CARDS) >= 21:
             IN_ROUND = False
-            sleep(1)
 
         else:
-            player_action = input("\n\n   What do you want to do? (Card: c / Stand: s): ").strip().lower()
+            print("\n\n   What do you want to do?")
+            player_action = input("   (Card: c / Stand: s / Double: d): ").strip().lower()
 
             if player_action == "c":
                 PLAYER_CARDS += new_card()
 
             elif player_action == "s":
+                IN_ROUND = False
+
+            elif player_action == "d":
+                PLAYER_CARDS += new_card()
+                ROUND_STAKE = 2
                 IN_ROUND = False
 
     # DEALER LOOP
@@ -126,11 +146,12 @@ while True:
         print()
 
         render_dealer_cards()
-        print("\n")
+        print(f"\n                        WIN RATIO:    {WIN_RATIO}")
         render_player_cards()
 
         print("\n\n   Dealers turn...")
-        sleep(1)
+        sleep(0.5)
+        sleep(0.5)
 
     # WHO WON
     os.system('cls')
@@ -140,30 +161,33 @@ while True:
         print()
 
         render_dealer_cards()
-        print("\n")
+        print(f"\n                        WIN RATIO:    {WIN_RATIO}  -{ROUND_STAKE}")
         render_player_cards()
 
         print("\n\n  -------------")
         print("  | YOU LOST! |")
         print("  -------------")
-        
+        WIN_RATIO -= ROUND_STAKE
+
     elif get_cards_value(PLAYER_CARDS) > get_cards_value(DEALER_CARDS) or get_cards_value(DEALER_CARDS) > 21:
         os.system('cls')
         print()
 
         render_dealer_cards()
-        print("\n")
+        print(f"\n                        WIN RATIO:    {WIN_RATIO}  +{ROUND_STAKE}")
         render_player_cards()
-        
+
         print("\n\n  ------------")
         print("  | YOU WON! |")
         print("  ------------")
+        WIN_RATIO += ROUND_STAKE
+
     else:
         os.system('cls')
         print()
 
         render_dealer_cards()
-        print("\n")
+        print(f"\n                        WIN RATIO:    {WIN_RATIO}  +-0")
         render_player_cards()
 
         print("\n\n  ---------")
